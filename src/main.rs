@@ -1,5 +1,6 @@
 mod client;
 mod server;
+mod rate;
 mod version;
 
 use clap::App;

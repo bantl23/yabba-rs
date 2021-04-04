@@ -8,6 +8,7 @@ use std::sync::mpsc::Sender;
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
 use std::time::SystemTime;
+use super::rate::Rate;
 
 
 use std::thread;
@@ -33,8 +34,8 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
     let buffer = vec![0u8; size];
     barrier.wait();
     println!("{} {:?}", index, SystemTime::now());
-    let mut total_elapsed = Duration::new(0, 0);
     let mut total_bytes = 0u64;
+    let mut total_elapsed = Duration::new(0, 0);
     loop {
         let now = SystemTime::now();
         match stream.write_all(&buffer) {
@@ -62,17 +63,15 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
         index,
         total_bytes,
         total_elapsed,
-        total_bytes as f64 * 8.0 / total_elapsed.as_secs_f64(),
+        Rate{
+            bytes: total_bytes,
+            elapsed: total_elapsed,
+        }.human_rate(),
     );
-    tx.send(Rate{
+    tx.send(Rate {
         bytes: total_bytes,
         elapsed: total_elapsed,
     }).unwrap();
-}
-
-struct Rate {
-    bytes: u64,
-    elapsed: Duration,
 }
 
 impl Client {
@@ -105,12 +104,12 @@ impl Client {
             total_bytes = total_bytes + rate.bytes;
             total_elapsed = total_elapsed + rate.elapsed;
         }
+        let total_rate = Rate{
+            bytes: total_bytes,
+            elapsed: total_elapsed,
+        };
         
-        println!("bytes: {}, elapsed: {:?}, rate: {}",
-            total_bytes,
-            total_elapsed,
-            total_bytes as f64 * 8.0 / total_elapsed.as_secs_f64(),
-        );
+        println!("total_bytes: {}, total_elapsed {:?}, total rate: {}", total_bytes, total_elapsed, total_rate.human_rate());
 
         Ok(())
     }
