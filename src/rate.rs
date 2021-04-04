@@ -10,9 +10,13 @@ pub struct Rate {
     pub threads: usize,
 }
 
-impl fmt::Display for Rate {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let r = self.bytes as f64 * 8.0 / self.elapsed.as_secs_f64() * self.threads as f64;
+impl Rate {
+    fn rate(&self) -> f64 {
+        self.bytes as f64 * 8.0 / self.elapsed.as_secs_f64() * self.threads as f64
+    }
+
+    fn hrate(&self) -> String {
+        let r = self.rate();
 
         let unit = vec!["", "K", "M", "G", "T", "P"];
         let mut human = format!("{:5.2} {}bits/s", r, unit[0]);
@@ -24,10 +28,19 @@ impl fmt::Display for Rate {
                 break;
             }
         }
-        write!(f, "local {}, peer {}, rate {}",
+        human
+    }
+}
+
+impl fmt::Display for Rate {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "local {}, peer {}, bytes {}, elapsed {}, threads {}, rate {}",
             self.local,
             self.peer,
-            human,
+            self.bytes,
+            self.elapsed.as_secs_f64(),
+            self.threads,
+            self.hrate(),
         )
     }
 }
