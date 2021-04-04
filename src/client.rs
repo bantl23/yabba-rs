@@ -66,11 +66,13 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
         Rate{
             bytes: total_bytes,
             elapsed: total_elapsed,
+            threads: 1,
         }.human_rate(),
     );
     tx.send(Rate {
         bytes: total_bytes,
         elapsed: total_elapsed,
+        threads: 1,
     }).unwrap();
 }
 
@@ -99,17 +101,20 @@ impl Client {
 
         let mut total_bytes = 0u64;
         let mut total_elapsed = Duration::new(0, 0);
+        let mut total_threads = 0u64;
         for _ in 0..nthreads {
             let rate = rx.recv().unwrap();
             total_bytes = total_bytes + rate.bytes;
             total_elapsed = total_elapsed + rate.elapsed;
+            total_threads = total_threads + 1;
         }
         let total_rate = Rate{
             bytes: total_bytes,
             elapsed: total_elapsed,
+            threads: total_threads,
         };
         
-        println!("total_bytes: {}, total_elapsed {:?}, total rate: {}", total_bytes, total_elapsed, total_rate.human_rate());
+        println!("total_bytes: {}, total_elapsed {:?}, total_threads {}, total_rate: {}", total_bytes, total_elapsed, total_threads, total_rate.human_rate());
 
         Ok(())
     }

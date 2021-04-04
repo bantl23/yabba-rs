@@ -5,6 +5,7 @@ use std::io::Result;
 use std::time::Duration;
 use std::time::SystemTime;
 use std::thread;
+use super::rate::Rate;
 
 pub struct Server {
     addr: String,
@@ -45,7 +46,11 @@ fn listen_handle_connection(mut stream: TcpStream, size: usize) {
     println!("bytes: {}, elapsed: {:?}, rate: {}",
         total_bytes,
         total_elapsed,
-        total_bytes as f64 * 8.0 / total_elapsed.as_secs_f64(),
+        Rate{
+            bytes: total_bytes,
+            elapsed: total_elapsed,
+            threads: 1,
+        }.human_rate(),
     );
 }
 
