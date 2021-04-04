@@ -17,9 +17,9 @@ fn main() {
                 .long("addrs")
                 .about("connect address(es)")
                 .default_value("localhost:5201"))
-            .arg(Arg::new("connections")
-                .short('c')
-                .long("connections")
+            .arg(Arg::new("streams")
+                .short('n')
+                .long("streams")
                 .about("number of parallel connections")
                 .default_value("1"))
             .arg(Arg::new("duration")
@@ -62,10 +62,10 @@ fn main() {
         }
     } else if let Some(ref matches) = matches.subcommand_matches("connect") {
         let addrs: Vec<&str> = matches.value_of("addrs").unwrap().split(",").collect();
-        let connections = matches.value_of("connections").unwrap().parse::<usize>().unwrap();
+        let streams = matches.value_of("streams").unwrap().parse::<usize>().unwrap();
         let duration = matches.value_of("duration").unwrap().parse::<u64>().unwrap();
         let size = matches.value_of("size").unwrap().parse::<usize>().unwrap();
-        let c = client::build_client(addrs, connections, duration, size);
+        let c = client::build_client(addrs, streams, duration, size);
         match c.connect() {
             Ok(_) => {
                 println!("done.");

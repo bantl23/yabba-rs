@@ -15,15 +15,15 @@ use std::thread;
 
 pub struct Client {
     addrs: Vec<String>,
-    connections: usize,
+    streams: usize,
     duration: Duration,
     size: usize,
 }
 
-pub fn build_client(addrs: Vec<&str>, connections: usize, duration: u64, size: usize) -> Client {
+pub fn build_client(addrs: Vec<&str>, streams: usize, duration: u64, size: usize) -> Client {
     let a = addrs.iter().map(|&a| a.to_string()).collect::<Vec<String>>();
     Client {
-        connections,
+        streams,
         addrs: a,
         duration: Duration::new(duration, 0),
         size: size,
@@ -79,11 +79,11 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
 impl Client {
     pub fn connect(self) -> Result<()> {
         let mut children = vec![];
-        let nthreads = self.addrs.len() * self.connections;
+        let nthreads = self.addrs.len() * self.streams;
         let barrier = Arc::new(Barrier::new(nthreads));
         let (tx, rx): (Sender<Rate>, Receiver<Rate>) = mpsc::channel();
         for addr in self.addrs.iter() {
-            for index in 0..self.connections {
+            for index in 0..self.streams {
                 let b = Arc::clone(&barrier);
                 let connector = TcpStream::connect(addr)?;
                 let duration = self.duration;
