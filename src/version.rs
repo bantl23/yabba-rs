@@ -1,6 +1,7 @@
-pub static VERSION: &'static str = "v0.9.0";
-pub static HASH: &'static str = "unknown";
-
-pub fn version() {
-    println!("version {} ({})", VERSION, HASH);
+pub fn version() { 
+    println!("yabba {} ({}) [{}]",
+        env!("VERGEN_GIT_SEMVER"),
+        env!("VERGEN_GIT_SHA"),
+        env!("VERGEN_BUILD_TIMESTAMP"),
+    );
 }

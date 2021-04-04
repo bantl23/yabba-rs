@@ -8,7 +8,7 @@ use clap::Arg;
 
 fn main() {
     let matches = App::new("yabba")
-        .version(version::VERSION)
+        .version(env!("VERGEN_GIT_SEMVER"))
         .about("yet another boring bandwidth analyzer")
         .subcommand(App::new("connect")
             .about("Connect to listeners")

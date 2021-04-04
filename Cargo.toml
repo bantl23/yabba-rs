@@ -3,8 +3,12 @@ name = "yabba"
 version = "0.1.0"
 authors = ["Deepak Kaul <deepak.b.kaul@gmail.com>"]
 edition = "2018"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 clap = "3.0.0-beta.2"
+
+[build-dependencies]
+vergen = "5.1.0"
