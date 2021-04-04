@@ -9,7 +9,6 @@ use std::sync::mpsc::Receiver;
 use std::time::Duration;
 use std::time::SystemTime;
 use super::rate::Rate;
-use prettytable::Table;
 
 
 use std::thread;
@@ -68,6 +67,7 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
         local: local,
         bytes: total_bytes,
         elapsed: total_elapsed,
+        threads: 1,
     }).unwrap();
 }
 
@@ -94,9 +94,6 @@ impl Client {
             let _ = child.join();
         }
 
-        let mut table = Table::new();
-        table.add_row(row!["PEER", "LOCAL", "THREADS", "BYTES", "ELAPSED", "RATE"]);
-
         let mut total_bytes = 0u64;
         let mut total_elapsed = Duration::new(0, 0);
         let mut total_threads = 0usize;
@@ -105,32 +102,18 @@ impl Client {
             total_bytes = total_bytes + rate.bytes;
             total_elapsed = total_elapsed + rate.elapsed;
             total_threads = total_threads + 1;
-            table.add_row(row![
-                rate.peer.clone(),
-                rate.local.clone(),
-                1,
-                rate.bytes.clone(),
-                rate.elapsed.clone().as_secs_f64(),
-                rate.human_rate(1),
-            ]);
+            println!("{}", rate);
         }
         let total_rate = Rate{
-            local: "".to_string(),
-            peer: "".to_string(),
+            local: "all".to_string(),
+            peer: "all".to_string(),
             bytes: total_bytes,
             elapsed: total_elapsed,
+            threads: nthreads,
         };
 
-        table.add_row(row![
-            "TOTALS",
-            "",
-            total_threads,
-            total_bytes,
-            total_elapsed.as_secs_f64(),
-            total_rate.human_rate(total_threads)
-        ]);
-        table.printstd();
-        
+        println!("{}", total_rate);
+
         Ok(())
     }
 }

@@ -5,7 +5,6 @@ mod version;
 
 use clap::App;
 use clap::Arg;
-#[macro_use] extern crate prettytable;
 
 fn main() {
     let matches = App::new("yabba")
@@ -54,9 +53,7 @@ fn main() {
         let size = matches.value_of("size").unwrap().parse::<usize>().unwrap();
         let s = server::build_server(addr, size);
         match s.listen() {
-            Ok(_) => {
-                println!("done.");
-            },
+            Ok(_) => {},
             Err(val) => {
                 println!("{:?}", val);
             }
@@ -68,9 +65,7 @@ fn main() {
         let size = matches.value_of("size").unwrap().parse::<usize>().unwrap();
         let c = client::build_client(addrs, streams, duration, size);
         match c.connect() {
-            Ok(_) => {
-                println!("done.");
-            },
+            Ok(_) => {},
             Err(val) => {
                 println!("{:?}", val);
             }

@@ -48,16 +48,15 @@ fn listen_handle_connection(mut stream: TcpStream, size: usize) {
             }
         }
     }
-    println!("bytes: {}, elapsed: {:?}, rate: {}",
-        total_bytes,
-        total_elapsed,
-        Rate{
-            local: local,
-            peer: peer,
-            bytes: total_bytes,
-            elapsed: total_elapsed,
-        }.human_rate(1),
-    );
+    let rate = Rate{
+        local: local,
+        peer: peer,
+        bytes: total_bytes,
+        elapsed: total_elapsed,
+        threads: 1,
+    };
+
+    println!("{}", rate);
 }
 
 impl Server {
