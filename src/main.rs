@@ -4,12 +4,14 @@ mod rate;
 mod version;
 
 use clap::App;
+use clap::AppSettings;
 use clap::Arg;
 
 fn main() {
     let matches = App::new("yabba")
         .version(env!("VERGEN_GIT_SEMVER"))
         .about("yet another boring bandwidth analyzer")
+        .setting(AppSettings::ArgRequiredElseHelp)
         .subcommand(App::new("connect")
             .about("Connect to listeners")
             .arg(Arg::new("addrs")
@@ -47,7 +49,7 @@ fn main() {
         .subcommand(App::new("version")
             .about("Prints detailed version information"))
         .get_matches();
-    
+
     if let Some(ref matches) = matches.subcommand_matches("listen") {
         let addr = matches.value_of("addr").unwrap();
         let size = matches.value_of("size").unwrap().parse::<usize>().unwrap();
