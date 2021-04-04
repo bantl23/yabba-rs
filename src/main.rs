@@ -5,6 +5,7 @@ mod version;
 
 use clap::App;
 use clap::Arg;
+#[macro_use] extern crate prettytable;
 
 fn main() {
     let matches = App::new("yabba")

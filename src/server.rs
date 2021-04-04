@@ -20,9 +20,14 @@ pub fn build_server(addr: &str, size: usize) -> Server {
 }
 
 fn listen_handle_connection(mut stream: TcpStream, size: usize) {
+
+    let local = format!("{}:{}", stream.local_addr().unwrap().ip(), stream.local_addr().unwrap().port());
+    let peer = format!("{}:{}", stream.peer_addr().unwrap().ip(), stream.peer_addr().unwrap().port());
     let mut buffer = vec![0u8; size];
     let mut total_elapsed = Duration::new(0, 0);
     let mut total_bytes = 0u64;
+
+    println!("accepted connection from {}", peer);
     loop {
         let now = SystemTime::now();
         match stream.read_exact(&mut buffer) {
@@ -47,10 +52,11 @@ fn listen_handle_connection(mut stream: TcpStream, size: usize) {
         total_bytes,
         total_elapsed,
         Rate{
+            local: local,
+            peer: peer,
             bytes: total_bytes,
             elapsed: total_elapsed,
-            threads: 1,
-        }.human_rate(),
+        }.human_rate(1),
     );
 }
 
