@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::net::TcpStream;
 use std::io::Result;
 use std::io::Write;
@@ -14,17 +15,14 @@ use super::rate::Rate;
 use std::thread;
 
 pub struct Client {
-    addrs: Vec<String>,
-    streams: usize,
+    addrs: HashMap<String, usize>,
     duration: Duration,
     size: usize,
 }
 
-pub fn build_client(addrs: Vec<&str>, streams: usize, duration: u64, size: usize) -> Client {
-    let a = addrs.iter().map(|&a| a.to_string()).collect::<Vec<String>>();
+pub fn build_client(addrs: HashMap<String, usize>, duration: u64, size: usize) -> Client {
     Client {
-        streams,
-        addrs: a,
+        addrs,
         duration: Duration::new(duration, 0),
         size: size,
     }
@@ -74,11 +72,14 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
 impl Client {
     pub fn connect(self) -> Result<()> {
         let mut children = vec![];
-        let nthreads = self.addrs.len() * self.streams;
+        let mut nthreads = 0;
+        for (_, streams) in self.addrs.iter() {
+            nthreads = nthreads + streams;
+        }
         let barrier = Arc::new(Barrier::new(nthreads));
         let (tx, rx): (Sender<Rate>, Receiver<Rate>) = mpsc::channel();
-        for addr in self.addrs.iter() {
-            for _ in 0..self.streams {
+        for (addr, streams) in self.addrs.iter() {
+            for _ in 0..*streams {
                 let b = Arc::clone(&barrier);
                 let connector = TcpStream::connect(addr)?;
                 let duration = self.duration;

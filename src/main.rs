@@ -3,6 +3,7 @@ mod server;
 mod rate;
 mod version;
 
+use std::collections::HashMap;
 use clap::App;
 use clap::AppSettings;
 use clap::Arg;
@@ -17,13 +18,8 @@ fn main() {
             .arg(Arg::new("addrs")
                 .short('a')
                 .long("addrs")
-                .about("connect address(es)")
-                .default_value("localhost:5201"))
-            .arg(Arg::new("streams")
-                .short('n')
-                .long("streams")
-                .about("number of parallel connections")
-                .default_value("1"))
+                .about("connect address(es) with stream counts")
+                .default_value("localhost:5201#1"))
             .arg(Arg::new("duration")
                 .short('d')
                 .long("duration")
@@ -61,11 +57,16 @@ fn main() {
             }
         }
     } else if let Some(ref matches) = matches.subcommand_matches("connect") {
-        let addrs: Vec<&str> = matches.value_of("addrs").unwrap().split(",").collect();
-        let streams = matches.value_of("streams").unwrap().parse::<usize>().unwrap();
+        let mut addrs: HashMap<String, usize> = HashMap::new();
+        for i in matches.value_of("addrs").unwrap().split(",") {
+            let j: Vec<&str> = i.split("#").collect(); 
+            let addr = j[0];
+            let streams = j[1].parse::<usize>().unwrap();
+            addrs.insert(addr.to_string(), streams);
+        }
         let duration = matches.value_of("duration").unwrap().parse::<u64>().unwrap();
         let size = matches.value_of("size").unwrap().parse::<usize>().unwrap();
-        let c = client::build_client(addrs, streams, duration, size);
+        let c = client::build_client(addrs, duration, size);
         match c.connect() {
             Ok(_) => {},
             Err(val) => {
