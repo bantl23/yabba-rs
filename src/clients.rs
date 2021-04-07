@@ -77,8 +77,8 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
         }
     }
     tx.send(Rate {
-        peer: peer,
         local: local,
+        peer: peer,
         bytes: total_bytes,
         elapsed: total_elapsed,
         threads: 1,
