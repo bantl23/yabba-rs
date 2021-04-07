@@ -20,6 +20,11 @@ fn main() {
                 .long("addrs")
                 .about("connect address(es) with stream counts")
                 .default_value("localhost:5201#1"))
+            .arg(Arg::new("interval")
+                .short('i')
+                .long("interval")
+                .about("report interval in seconds")
+                .default_value("2"))
             .arg(Arg::new("duration")
                 .short('d')
                 .long("duration")
@@ -37,6 +42,11 @@ fn main() {
                 .long("addr")
                 .about("bind address")
                 .default_value("0.0.0.0:5201"))
+            .arg(Arg::new("interval")
+                .short('i')
+                .long("interval")
+                .about("report interval in seconds")
+                .default_value("2"))
             .arg(Arg::new("size")
                 .short('s')
                 .long("size")
@@ -48,8 +58,9 @@ fn main() {
 
     if let Some(ref matches) = matches.subcommand_matches("listen") {
         let addr = matches.value_of("addr").unwrap();
+        let interval = matches.value_of("interval").unwrap().parse::<u64>().unwrap();
         let size = matches.value_of("size").unwrap().parse::<usize>().unwrap();
-        let s = server::build_server(addr, size);
+        let s = server::build_server(addr, interval, size);
         match s.listen() {
             Ok(_) => {},
             Err(val) => {
@@ -64,9 +75,10 @@ fn main() {
             let streams = j[1].parse::<usize>().unwrap();
             addrs.insert(addr.to_string(), streams);
         }
+        let interval = matches.value_of("interval").unwrap().parse::<u64>().unwrap();
         let duration = matches.value_of("duration").unwrap().parse::<u64>().unwrap();
         let size = matches.value_of("size").unwrap().parse::<usize>().unwrap();
-        let c = clients::build_clients(addrs, duration, size);
+        let c = clients::build_clients(addrs, interval, duration, size);
         match c.connect() {
             Ok(_) => {},
             Err(val) => {
