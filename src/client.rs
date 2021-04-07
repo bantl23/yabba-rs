@@ -14,14 +14,14 @@ use super::rate::Rate;
 
 use std::thread;
 
-pub struct Client {
+pub struct Clients {
     addrs: HashMap<String, usize>,
     duration: Duration,
     size: usize,
 }
 
-pub fn build_client(addrs: HashMap<String, usize>, duration: u64, size: usize) -> Client {
-    Client {
+pub fn build_client(addrs: HashMap<String, usize>, duration: u64, size: usize) -> Clients {
+    Clients {
         addrs,
         duration: Duration::new(duration, 0),
         size: size,
@@ -69,7 +69,7 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
     }).unwrap();
 }
 
-impl Client {
+impl Clients {
     pub fn connect(self) -> Result<()> {
         let mut children = vec![];
         let mut nthreads = 0;
