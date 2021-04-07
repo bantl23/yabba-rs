@@ -34,7 +34,6 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
     let peer = format!("{}:{}", stream.peer_addr().unwrap().ip(), stream.peer_addr().unwrap().port());
 
     barrier.wait();
-    println!("peer={}, local={}: {:?}", peer, local, SystemTime::now());
     let mut total_bytes = 0u64;
     let mut total_elapsed = Duration::new(0, 0);
     loop {
@@ -95,24 +94,36 @@ impl Clients {
             let _ = child.join();
         }
 
-        let mut total_bytes = 0u64;
-        let mut total_elapsed = Duration::new(0, 0);
-        let mut total_threads = 0usize;
+        let mut rates = HashMap::new();
         for _ in 0..nthreads {
             let rate = rx.recv().unwrap();
-            total_bytes = total_bytes + rate.bytes;
-            total_elapsed = total_elapsed + rate.elapsed;
-            total_threads = total_threads + 1;
             println!("{}", rate);
+            let mut stored_rate = rates.entry(rate.peer.clone()).or_insert(
+                Rate{
+                    local: "all".to_string(),
+                    peer: rate.peer.clone().to_string(),
+                    bytes: 0,
+                    elapsed: Duration::new(0, 0),
+                    threads: 0,
+                }
+            );
+            stored_rate.bytes = stored_rate.bytes + rate.bytes;
+            stored_rate.elapsed = stored_rate.elapsed + rate.elapsed;
+            stored_rate.threads = stored_rate.threads + rate.threads;
         }
-        let total_rate = Rate{
+        let mut total_rate = Rate{
             local: "all".to_string(),
-            peer: "all".to_string(),
-            bytes: total_bytes,
-            elapsed: total_elapsed,
-            threads: nthreads,
+            peer:  "all".to_string(),
+            bytes: 0,
+            elapsed: Duration::new(0, 0),
+            threads: 0,
         };
-
+        for (_, v) in rates {
+            println!("{}", v);
+            total_rate.bytes = total_rate.bytes + v.bytes;
+            total_rate.elapsed = total_rate.elapsed + v.elapsed;
+            total_rate.threads = total_rate.threads + v.threads;
+        }
         println!("{}", total_rate);
 
         Ok(())
