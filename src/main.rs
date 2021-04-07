@@ -2,6 +2,7 @@ mod clients;
 mod server;
 mod rate;
 mod version;
+mod writer;
 
 use std::collections::HashMap;
 use clap::App;
