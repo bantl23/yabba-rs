@@ -20,7 +20,7 @@ pub struct Clients {
     size: usize,
 }
 
-pub fn build_client(addrs: HashMap<String, usize>, duration: u64, size: usize) -> Clients {
+pub fn build_clients(addrs: HashMap<String, usize>, duration: u64, size: usize) -> Clients {
     Clients {
         addrs,
         duration: Duration::new(duration, 0),

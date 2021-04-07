@@ -1,4 +1,4 @@
-mod client;
+mod clients;
 mod server;
 mod rate;
 mod version;
@@ -66,7 +66,7 @@ fn main() {
         }
         let duration = matches.value_of("duration").unwrap().parse::<u64>().unwrap();
         let size = matches.value_of("size").unwrap().parse::<usize>().unwrap();
-        let c = client::build_client(addrs, duration, size);
+        let c = clients::build_clients(addrs, duration, size);
         match c.connect() {
             Ok(_) => {},
             Err(val) => {
