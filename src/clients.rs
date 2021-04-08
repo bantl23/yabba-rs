@@ -10,6 +10,7 @@ use std::sync::mpsc::Receiver;
 use std::time::Duration;
 use std::time::SystemTime;
 use super::rate::Rate;
+use super::writer::write;
 
 
 use std::thread;
@@ -59,9 +60,17 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
                             };
                             interval_bytes = 0;
                             previous_elapsed = total_elapsed;
-                            println!("send rate {}", rate);
+                            tx.send(rate).unwrap();
                         }
                         if total_elapsed.as_secs_f64() > duration.as_secs_f64() {
+                            let rate = Rate {
+                                local: local.to_string(),
+                                peer: peer.to_string(),
+                                bytes: interval_bytes,
+                                elapsed: total_elapsed - previous_elapsed,
+                                threads: 1,
+                            };
+                            tx.send(rate).unwrap();
                             break;
                         }
                     },
@@ -76,13 +85,6 @@ fn client_handle_connection(mut stream: TcpStream, barrier: Arc<Barrier>, tx: Se
             }
         }
     }
-    tx.send(Rate {
-        local: local,
-        peer: peer,
-        bytes: total_bytes,
-        elapsed: total_elapsed,
-        threads: 1,
-    }).unwrap();
 }
 
 impl Clients {
@@ -94,6 +96,9 @@ impl Clients {
         }
         let barrier = Arc::new(Barrier::new(nthreads));
         let (tx, rx): (Sender<Rate>, Receiver<Rate>) = mpsc::channel();
+        let w = thread::spawn(move || {
+            write(rx);
+        });
         for (addr, streams) in self.addrs.iter() {
             for _ in 0..*streams {
                 let b = Arc::clone(&barrier);
@@ -107,42 +112,13 @@ impl Clients {
                 }));
             }
         }
+        drop(tx);
 
         for child in children {
             let _ = child.join();
         }
 
-        let mut rates = HashMap::new();
-        for _ in 0..nthreads {
-            let rate = rx.recv().unwrap();
-            println!("{}", rate);
-            let mut stored_rate = rates.entry(rate.peer.clone()).or_insert(
-                Rate{
-                    local: "all".to_string(),
-                    peer: rate.peer.clone().to_string(),
-                    bytes: 0,
-                    elapsed: Duration::new(0, 0),
-                    threads: 0,
-                }
-            );
-            stored_rate.bytes = stored_rate.bytes + rate.bytes;
-            stored_rate.elapsed = stored_rate.elapsed + rate.elapsed;
-            stored_rate.threads = stored_rate.threads + rate.threads;
-        }
-        let mut total_rate = Rate{
-            local: "all".to_string(),
-            peer:  "all".to_string(),
-            bytes: 0,
-            elapsed: Duration::new(0, 0),
-            threads: 0,
-        };
-        for (_, v) in rates {
-            println!("{}", v);
-            total_rate.bytes = total_rate.bytes + v.bytes;
-            total_rate.elapsed = total_rate.elapsed + v.elapsed;
-            total_rate.threads = total_rate.threads + v.threads;
-        }
-        println!("{}", total_rate);
+        let _ = w.join();
 
         Ok(())
     }
