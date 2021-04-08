@@ -96,8 +96,9 @@ impl Clients {
         }
         let barrier = Arc::new(Barrier::new(nthreads));
         let (tx, rx): (Sender<Rate>, Receiver<Rate>) = mpsc::channel();
+        let dur = self.duration.clone();
         let w = thread::spawn(move || {
-            write(rx);
+            write(dur, rx);
         });
         for (addr, streams) in self.addrs.iter() {
             for _ in 0..*streams {

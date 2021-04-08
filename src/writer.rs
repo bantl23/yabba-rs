@@ -3,25 +3,27 @@ use std::sync::mpsc::Receiver;
 use std::time::Duration;
 use super::rate::Rate;
 
-pub fn write(rx: Receiver<Rate>) {
+pub fn write(duration: Duration, rx: Receiver<Rate>) {
     let mut stream_rates = HashMap::new();
     let mut done = false;
     while !done {
         match rx.recv() {
             Ok(rate) => {
-                println!("{}", rate);
-                let mut stored_stream_rate = stream_rates.entry((rate.local.clone(), rate.peer.clone())).or_insert(
-                    Rate{
-                        local: rate.local,
-                        peer: rate.peer,
-                        bytes: 0,
-                        elapsed: Duration::new(0, 0),
-                        threads: 0,
-                    }
-                );
-                stored_stream_rate.bytes = stored_stream_rate.bytes + rate.bytes;
-                stored_stream_rate.elapsed = stored_stream_rate.elapsed + rate.elapsed;
-                stored_stream_rate.threads = rate.threads;
+                if rate.bytes != 0 {
+                    let mut stored_stream_rate = stream_rates.entry((rate.local.clone(), rate.peer.clone())).or_insert(
+                        Rate{
+                            local: rate.local.clone(),
+                            peer: rate.peer.clone(),
+                            bytes: 0,
+                            elapsed: Duration::new(0, 0),
+                            threads: 0,
+                        }
+                    );
+                    stored_stream_rate.bytes = stored_stream_rate.bytes + rate.bytes;
+                    stored_stream_rate.elapsed = stored_stream_rate.elapsed + rate.elapsed;
+                    stored_stream_rate.threads = rate.threads;
+                    println!("{}, {}/{}", rate, stored_stream_rate.elapsed.as_secs_f64() as u64, duration.as_secs_f64() as u64);
+                }
             },
             Err(_) => {
                 done = true
