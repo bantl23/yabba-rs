@@ -5,16 +5,15 @@ mod version;
 mod writer;
 
 use std::collections::HashMap;
-use clap::App;
-use clap::AppSettings;
 use clap::Arg;
+use clap::Command;
 
 fn main() {
-    let matches = App::new("yabba")
+    let matches = Command::new("yabba")
         .version(env!("VERGEN_GIT_SEMVER"))
         .about("yet another boring bandwidth analyzer")
-        .setting(AppSettings::ArgRequiredElseHelp)
-        .subcommand(App::new("connect")
+        .arg_required_else_help(true)
+        .subcommand(Command::new("connect")
             .about("Connect to listeners")
             .arg(Arg::new("addrs")
                 .short('a')
@@ -36,7 +35,7 @@ fn main() {
                 .long("size")
                 .help("buffer size")
                 .default_value("131072")))
-        .subcommand(App::new("listen")
+        .subcommand(Command::new("listen")
             .about("Listen for clients")
             .arg(Arg::new("addr")
                 .short('a')
@@ -53,7 +52,7 @@ fn main() {
                 .long("size")
                 .help("buffer size")
                 .default_value("131072")))
-        .subcommand(App::new("version")
+        .subcommand(Command::new("version")
             .about("Prints detailed version information"))
         .get_matches();
 
